@@ -201,7 +201,7 @@ class GameScene2 extends Phaser.Scene {
 
     entregarPeixe() {
         if(this.temPeixe){
-            this.coracao = this.add.image(400, 350, 'coracao').setDepth(2); 
+            this.coracao = this.add.image(400, 350, 'coracao').setDepth(2).setScale(0.2); 
             this.time.delayedCall(500, () => {
                 this.scene.start('WinScene');
             });         
