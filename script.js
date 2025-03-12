@@ -57,9 +57,9 @@ class GameScene extends Phaser.Scene {
         this.scoreText = this.add.text(16, 16, 'Placar: 0', { fontSize: '32px', fill: '#fff' });
 
         this.physics.add.overlap(this.player, this.keyItem, this.collectKey, null, this);
-        this.physics.add.overlap(this.player, this.enemy, () => {
-            this.scene.start('GameOverScene');
-        });
+        this.physics.add.overlap(this.player, this.enemy, this.gameOver, null, this);
+
+
 
         this.cursors = this.input.keyboard.createCursorKeys();
     }
@@ -103,6 +103,33 @@ class GameScene extends Phaser.Scene {
             this.scene.start('GameScene2');
         }
     }
+
+    // Função chamada quando o jogador colide com o inimigo
+    gameOver() {
+        this.scene.start('GameOverScene'); // Inicia a cena de Game Over
+    }
+}
+
+class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverScene' });
+    }
+
+    preload() {
+        this.load.image('backgroundGameOver', 'assets/background_gameover.png'); // Defina sua imagem de Game Over
+    }
+
+    create() {
+        this.add.image(400, 300, 'backgroundGameOver'); // Adiciona o background de Game Over
+        this.add.text(280, 280, 'Game Over! Você perdeu!', { fontSize: '32px', fill: '#fff' });
+
+        // Botão para reiniciar o jogo
+        let restartButton = this.add.text(350, 350, 'Reiniciar', { fontSize: '32px', fill: '#fff' })
+            .setInteractive()
+            .on('pointerdown', () => {
+                this.scene.start('GameScene'); // Reinicia a fase
+            });
+    }
 }
 
 class GameScene2 extends Phaser.Scene {
@@ -115,17 +142,31 @@ class GameScene2 extends Phaser.Scene {
         this.load.image('player', 'assets/player.png');
         this.load.image('gato', 'assets/gato.png');
         this.load.image('peixe', 'assets/peixe.png');
+        this.load.image('backgroundGame2', 'assets/background_game2.png');
     }
 
     create() {
-        this.player = this.physics.add.sprite(100, 300, 'player');
-        this.gato = this.physics.add.sprite(50, 50, 'gato');
+        this.add.image(400, 300, 'backgroundGame2');
+        this.add.text(16, 16, 'Pegue o peixe e entregue ao gato!', { fontSize: '20px', fill: '#fff' });
+
+        this.player = this.physics.add.sprite(100, 100, 'player');
+        this.player.setCollideWorldBounds(true);
+        this.player.setBounce(0.2);
+
+        // Definindo a profundidade para que o jogador fique acima do peixe e do gato
+        this.player.setDepth(2);
+
+        this.gato = this.physics.add.sprite(400, 400, 'gato');
+        this.gato.setDepth(1); // Gato fica atrás do jogador
+
         this.peixe = this.physics.add.sprite(200, 300, 'peixe');
+        this.peixe.setDepth(1); // Peixe fica atrás do jogador
         this.peixe.setInteractive();
         this.input.on('pointerdown', () => this.coletarPeixe());
         this.temPeixe = false;
 
-        this.add.text(50, 50, 'Pegue o peixe e entregue ao gato!', { fontSize: '20px', fill: '#fff' });
+        // Definindo os controles do jogador
+        this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     coletarPeixe() {
@@ -137,7 +178,22 @@ class GameScene2 extends Phaser.Scene {
     }
 
     update() {
-        if (this.temPeixe && Phaser.Geom.Intersects.RectangleToRectangle(this.personagem.getBounds(), this.gato.getBounds())) {
+        this.player.setVelocity(0);
+
+        if (this.cursors.left.isDown) {
+            this.player.setVelocityX(-160);
+        } else if (this.cursors.right.isDown) {
+            this.player.setVelocityX(160);
+        }
+
+        if (this.cursors.up.isDown) {
+            this.player.setVelocityY(-160);
+        } else if (this.cursors.down.isDown) {
+            this.player.setVelocityY(160);
+        }
+
+        // Verificando se o jogador entregou o peixe ao gato
+        if (this.temPeixe && Phaser.Geom.Intersects.RectangleToRectangle(this.player.getBounds(), this.gato.getBounds())) {
             this.entregarPeixe();
         }
     }
@@ -172,7 +228,7 @@ const config = {
     width: 800,
     height: 600,
     physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
-    scene: [GameScene, GameScene2, WinScene]
+    scene: [MenuScene, GameScene, GameOverScene, GameScene2, WinScene]
 };
 
 const game = new Phaser.Game(config);
