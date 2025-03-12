@@ -135,7 +135,8 @@ class GameOverScene extends Phaser.Scene {
 class GameScene2 extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene2' });
-        this.peixeEntregue = false;
+        // this.peixeEntregue = false;
+        this.temPeixe = false;
     }
 
     preload() {
@@ -143,6 +144,7 @@ class GameScene2 extends Phaser.Scene {
         this.load.image('gato', 'assets/gato.png');
         this.load.image('peixe', 'assets/peixe.png');
         this.load.image('backgroundGame2', 'assets/background_game2.png');
+        this.load.image('coracao', 'assets/coracao.png');
     }
 
     create() {
@@ -159,22 +161,21 @@ class GameScene2 extends Phaser.Scene {
         this.gato = this.physics.add.sprite(400, 400, 'gato');
         this.gato.setDepth(1); // Gato fica atrás do jogador
 
-        this.peixe = this.physics.add.sprite(200, 300, 'peixe');
+        this.peixe = this.physics.add.sprite(500, 300, 'peixe');
         this.peixe.setDepth(1); // Peixe fica atrás do jogador
-        this.peixe.setInteractive();
-        this.input.on('pointerdown', () => this.coletarPeixe());
-        this.temPeixe = false;
+
+        this.physics.add.overlap(this.player, this.peixe, this.coletarPeixe, null, this);
+        this.physics.add.overlap(this.player, this.gato, this.entregarPeixe, null, this);
 
         // Definindo os controles do jogador
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     coletarPeixe() {
-        if (!this.temPeixe) {
-            this.temPeixe = true;
-            this.peixe.destroy();
-            console.log("Você pegou o peixe!");
-        }
+       if (!this.temPeixe){
+        this.temPeixe = true;
+        this.peixe.destroy();
+       }
     }
 
     update() {
@@ -199,14 +200,17 @@ class GameScene2 extends Phaser.Scene {
     }
 
     entregarPeixe() {
-        if (this.temPeixe) {
-            console.log("Você entregou o peixe para o gato! Parabéns, fase concluída!");
-            this.peixeEntregue = true;
-            this.temPeixe = false;
-            this.scene.start('WinScene'); // Muda para a cena de vitória
+        if(this.temPeixe){
+            this.coracao = this.add.image(400, 350, 'coracao').setDepth(2); 
+            this.time.delayedCall(500, () => {
+                this.scene.start('WinScene');
+            });         
         }
     }
+
 }
+
+
 
 class WinScene extends Phaser.Scene {
     constructor() {
